@@ -17,6 +17,14 @@ export function Search() {
   const [isFollowUp, setIsFollowUp] = useState(false);
   const [followUpQuery, setFollowUpQuery] = useState<string | null>(null);
   
+  // 添加历史记录状态
+  const [searchHistory, setSearchHistory] = useState<Array<{
+    query: string;
+    results: any;
+    isFollowUp: boolean;
+    originalQuery?: string;
+  }>>([]);
+  
   // Extract query from URL, handling both initial load and subsequent navigation
   const getQueryFromUrl = () => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -41,6 +49,12 @@ export function Search() {
           setOriginalQuery(searchQuery);
         }
         setIsFollowUp(false);
+        // 新搜索时重置历史
+        setSearchHistory([{
+          query: searchQuery,
+          results: result,
+          isFollowUp: false
+        }]);
       }
       return result;
     },
@@ -59,6 +73,12 @@ export function Search() {
           setSessionId(result.sessionId);
           setOriginalQuery(searchQuery);
           setIsFollowUp(false);
+          // 新搜索时重置历史
+          setSearchHistory([{
+            query: followUpQuery,
+            results: result,
+            isFollowUp: false
+          }]);
         }
         return result;
       }
@@ -84,6 +104,12 @@ export function Search() {
             setSessionId(result.sessionId);
             setOriginalQuery(searchQuery);
             setIsFollowUp(false);
+            // 新搜索时重置历史
+            setSearchHistory([{
+              query: followUpQuery,
+              results: result,
+              isFollowUp: false
+            }]);
           }
           return result;
         }
@@ -97,18 +123,26 @@ export function Search() {
     onSuccess: (result) => {
       setCurrentResults(result);
       setIsFollowUp(true);
+      // 追加到历史记录
+      setSearchHistory(prev => [...prev, {
+        query: followUpQuery!,
+        results: result,
+        isFollowUp: true,
+        originalQuery: originalQuery || ''
+      }]);
     },
   });
 
   const handleSearch = async (newQuery: string) => {
     if (newQuery === searchQuery) {
-      // If it's the same query, increment the refetch counter to trigger a new search
       setRefetchCounter(c => c + 1);
     } else {
       setSessionId(null); // Clear session on new search
       setOriginalQuery(null); // Clear original query
       setIsFollowUp(false); // Reset follow-up state
       setSearchQuery(newQuery);
+      // 新搜索时重置历史记录
+      setSearchHistory([]);
     }
     // Update URL without triggering a page reload
     const newUrl = `/search?q=${encodeURIComponent(newQuery)}`;
@@ -128,11 +162,10 @@ export function Search() {
       setOriginalQuery(null); // Clear original query
       setIsFollowUp(false); // Reset follow-up state
       setSearchQuery(query);
+      // URL 变化时重置历史记录
+      setSearchHistory([]);
     }
   }, [location]);
-
-  // Use currentResults if available, otherwise fall back to data from useQuery
-  const displayResults = currentResults || data;
 
   return (
     <motion.div
@@ -174,39 +207,58 @@ export function Search() {
           </div>
         </motion.div>
 
-        <AnimatePresence mode="wait">
+        {/* 显示所有结果 */}
+        <div className="space-y-8">
+          {searchHistory.map((item, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <SearchResults
+                query={item.query}
+                results={item.results}
+                isLoading={false}
+                error={undefined}
+                isFollowUp={item.isFollowUp}
+                originalQuery={item.originalQuery}
+              />
+            </motion.div>
+          ))}
+
+          {/* 显示加载状态 */}
+          {(isLoading || followUpMutation.isPending) && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <SearchResults
+                query={followUpQuery || searchQuery}
+                results={null}
+                isLoading={true}
+                error={(error || followUpMutation.error) || undefined}
+                isFollowUp={isFollowUp}
+                originalQuery={originalQuery || ''}
+              />
+            </motion.div>
+          )}
+        </div>
+
+        {/* Follow-up 输入框 */}
+        {currentResults && !isLoading && !followUpMutation.isPending && (
           <motion.div
-            key={searchQuery}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="flex flex-col items-stretch"
+            transition={{ duration: 0.3, delay: 0.2 }}
+            className="sticky bottom-4 max-w-2xl mx-auto bg-background/80 backdrop-blur-sm p-4 rounded-lg shadow-lg z-10"
           >
-            <SearchResults
-              query={isFollowUp ? (followUpQuery || '') : searchQuery}
-              results={displayResults}
-              isLoading={isLoading || followUpMutation.isPending}
-              error={error || followUpMutation.error || undefined}
-              isFollowUp={isFollowUp}
-              originalQuery={originalQuery || ''}
+            <FollowUpInput
+              onSubmit={handleFollowUp}
+              isLoading={followUpMutation.isPending}
             />
-
-            {displayResults && !isLoading && !followUpMutation.isPending && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.2 }}
-                className="mt-6 max-w-2xl"
-              >
-                <FollowUpInput
-                  onSubmit={handleFollowUp}
-                  isLoading={followUpMutation.isPending}
-                />
-              </motion.div>
-            )}
           </motion.div>
-        </AnimatePresence>
+        )}
       </motion.div>
     </motion.div>
   );

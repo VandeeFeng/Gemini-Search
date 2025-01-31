@@ -36,7 +36,7 @@ Created by [@ammaar](https://x.com/ammaar)
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/ammaarreshi/Gemini-Search.git
+   git clone https://github.com/vandeefeng/Gemini-Search.git
    cd Gemini-Search
    ```
 
@@ -62,6 +62,51 @@ Created by [@ammaar](https://x.com/ammaar)
    ```
    http://localhost:3000
    ```
+
+## Docker Setup
+
+### Using Docker Compose (Recommended)
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/vandeefeng/Gemini-Search.git
+   cd Gemini-Search
+   ```
+
+2. Create a `.env` file with your API key:
+   ```
+   GOOGLE_API_KEY=your_api_key_here
+   ```
+
+3. Build and run with Docker Compose:
+   ```bash
+   docker compose up -d
+   ```
+
+4. Access the application at:
+   ```
+   http://localhost:3000
+   ```
+
+### Manual Docker Build
+
+1. Build the Docker image:
+   ```bash
+   docker build -t gemini-search .
+   ```
+
+2. Run the container:
+   ```bash
+   docker run -d -p 3000:3000 --env-file .env gemini-search
+   ```
+
+The Docker setup includes:
+- Multi-stage build for optimal image size
+- Node.js 20 Alpine-based image for minimal footprint
+- Volume mounts for uploads and logs persistence
+- Automatic container restart policy
+- Non-root user for security
+- Production-ready configuration
 
 ## Environment Variables
 

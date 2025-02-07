@@ -2,22 +2,13 @@ version: '3.8'
 
 services:
   app:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3010:3010"
     environment:
       - NODE_ENV=production
-    volumes:
-      # Persist uploads if needed
-      - uploads:/app/uploads
-      # Persist logs
-      - logs:/app/logs
     restart: unless-stopped
     env_file:
       - .env
-
-volumes:
-  uploads:
-  logs: 

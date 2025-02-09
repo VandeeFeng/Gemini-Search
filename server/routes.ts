@@ -48,6 +48,12 @@ async function formatResponseToMarkdown(
   // Process bullet points
   processedText = processedText.replace(/^[•●○]\s*/gm, "* ");
 
+  // Process references in square brackets [1], [2], etc.
+  processedText = processedText.replace(
+    /\[(\d+)\]/g,
+    (match, num) => `<a href="#ref-${num}" class="reference-link">[${num}]</a>`
+  );
+
   // Split into paragraphs
   const paragraphs = processedText.split("\n\n").filter(Boolean);
 
@@ -63,10 +69,12 @@ async function formatResponseToMarkdown(
     })
     .join("\n\n");
 
-  // Configure marked options for better header rendering
+  // Configure marked options for better header rendering and allow HTML
   marked.setOptions({
     gfm: true,
     breaks: true,
+    headerIds: true,
+    mangle: false,
   });
 
   // Convert markdown to HTML using marked
@@ -140,13 +148,10 @@ export function registerRoutes(app: Express): Server {
       );
       const text = response.text();
 
-      // Format the response text to proper markdown/HTML
-      const formattedText = await formatResponseToMarkdown(text);
-
       // Extract sources from grounding metadata
       const sourceMap = new Map<
         string,
-        { title: string; url: string; snippet: string }
+        { title: string; url: string; snippet: string; index: number }
       >();
 
       // Get grounding metadata from response
@@ -171,6 +176,7 @@ export function registerRoutes(app: Express): Server {
                 title: chunk.web.title,
                 url: url,
                 snippet: snippets || "",
+                index: sourceMap.size + 1 // Add 1-based index
               });
             }
           }
@@ -178,6 +184,24 @@ export function registerRoutes(app: Express): Server {
       }
 
       const sources = Array.from(sourceMap.values());
+
+      // Sort sources by index to maintain order
+      sources.sort((a, b) => a.index - b.index);
+
+      // Format the response text to proper markdown/HTML
+      let formattedText = await formatResponseToMarkdown(text);
+
+      // Add source references at the bottom
+      formattedText += "\n\n<div class='references'>\n";
+      sources.forEach((source) => {
+        formattedText += `<div id="ref-${source.index}" class="reference-item">
+          <span class="reference-number">[${source.index}]</span>
+          <a href="${source.url}" target="_blank" rel="noopener noreferrer" class="reference-link">
+            ${source.title}
+          </a>
+        </div>\n`;
+      });
+      formattedText += "</div>";
 
       // Generate a session ID and store the chat
       const sessionId = Math.random().toString(36).substring(7);
@@ -232,13 +256,10 @@ export function registerRoutes(app: Express): Server {
       );
       const text = response.text();
 
-      // Format the response text to proper markdown/HTML
-      const formattedText = await formatResponseToMarkdown(text);
-
       // Extract sources from grounding metadata
       const sourceMap = new Map<
         string,
-        { title: string; url: string; snippet: string }
+        { title: string; url: string; snippet: string; index: number }
       >();
 
       // Get grounding metadata from response
@@ -263,6 +284,7 @@ export function registerRoutes(app: Express): Server {
                 title: chunk.web.title,
                 url: url,
                 snippet: snippets || "",
+                index: sourceMap.size + 1 // Add 1-based index
               });
             }
           }
@@ -271,7 +293,30 @@ export function registerRoutes(app: Express): Server {
 
       const sources = Array.from(sourceMap.values());
 
+      // Sort sources by index to maintain order
+      sources.sort((a, b) => a.index - b.index);
+
+      // Format the response text to proper markdown/HTML
+      let formattedText = await formatResponseToMarkdown(text);
+
+      // Add source references at the bottom
+      formattedText += "\n\n<div class='references'>\n";
+      sources.forEach((source) => {
+        formattedText += `<div id="ref-${source.index}" class="reference-item">
+          <span class="reference-number">[${source.index}]</span>
+          <a href="${source.url}" target="_blank" rel="noopener noreferrer" class="reference-link">
+            ${source.title}
+          </a>
+        </div>\n`;
+      });
+      formattedText += "</div>";
+
+      // Generate a session ID and store the chat
+      const sessionId = Math.random().toString(36).substring(7);
+      chatSessions.set(sessionId, chat);
+
       res.json({
+        sessionId,
         summary: formattedText,
         sources,
       });

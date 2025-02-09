@@ -120,6 +120,10 @@ export function SearchResults({
               "prose-li:my-2 prose-li:marker:text-muted-foreground",
               "prose-strong:font-semibold",
               "prose-a:text-primary prose-a:no-underline hover:prose-a:text-primary/80",
+              "[&_.reference-link]:text-primary [&_.reference-link]:no-underline [&_.reference-link]:font-medium [&_.reference-link]:hover:text-primary/80 [&_.reference-link]:cursor-pointer",
+              "[&_.references]:mt-8 [&_.references]:pt-4 [&_.references]:border-t [&_.references]:border-border",
+              "[&_.reference-item]:mb-2 [&_.reference-item]:text-sm [&_.reference-item]:text-muted-foreground",
+              "[&_.reference-number]:mr-2 [&_.reference-number]:font-medium"
             )}
             dangerouslySetInnerHTML={{ 
               __html: results.summary

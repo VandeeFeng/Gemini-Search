@@ -120,10 +120,15 @@ export function SearchResults({
               "prose-li:my-2 prose-li:marker:text-muted-foreground",
               "prose-strong:font-semibold",
               "prose-a:text-primary prose-a:no-underline hover:prose-a:text-primary/80",
-              "[&_.reference-link]:text-primary [&_.reference-link]:no-underline [&_.reference-link]:font-medium [&_.reference-link]:hover:text-primary/80 [&_.reference-link]:cursor-pointer",
-              "[&_.references]:mt-8 [&_.references]:pt-4 [&_.references]:border-t [&_.references]:border-border",
-              "[&_.reference-item]:mb-2 [&_.reference-item]:text-sm [&_.reference-item]:text-muted-foreground",
-              "[&_.reference-number]:mr-2 [&_.reference-number]:font-medium"
+              "[&_.reference-link]:text-primary [&_.reference-link]:no-underline [&_.reference-link]:font-medium [&_.reference-link]:hover:text-primary/80 [&_.reference-link]:cursor-pointer [&_.reference-link]:ml-0.5 [&_.reference-link]:text-sm [&_.reference-link]:bg-primary/5 [&_.reference-link]:px-1.5 [&_.reference-link]:py-0.5 [&_.reference-link]:rounded-md [&_.reference-link]:transition-colors",
+              "[&_.reference-container]:inline-flex [&_.reference-container]:items-center [&_.reference-container]:relative [&_.reference-container]:z-10",
+              "[&_.reference-tooltip]:z-50 [&_.reference-tooltip]:bg-background dark:[&_.reference-tooltip]:bg-gray-900 [&_.reference-tooltip]:border-border dark:[&_.reference-tooltip]:border-gray-700",
+              "[&_.reference-title]:text-foreground dark:[&_.reference-title]:text-gray-100",
+              "[&_.reference-snippet]:text-muted-foreground dark:[&_.reference-snippet]:text-gray-400",
+              "[&_.reference-url]:text-primary dark:[&_.reference-url]:text-blue-400 [&_.reference-url]:border-border dark:[&_.reference-url]:border-gray-700",
+              "[&_.reference-tooltip::before]:border-top-color-border dark:[&_.reference-tooltip::before]:border-top-color-gray-700",
+              "[&_.reference-tooltip::after]:border-top-color-background dark:[&_.reference-tooltip::after]:border-top-color-gray-900",
+              "dark:[&_.reference-link]:text-blue-400 dark:[&_.reference-link]:bg-blue-400/10 dark:hover:[&_.reference-link]:bg-blue-400/20"
             )}
             dangerouslySetInnerHTML={{ 
               __html: results.summary

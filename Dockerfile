@@ -8,23 +8,20 @@ RUN npm config set registry https://registry.npmmirror.com/ && \
     npm config set fetch-retry-mintimeout 5000 && \
     npm config set fetch-retry-maxtimeout 60000
 
-# Copy package files and configuration files
+# Copy package files first for better cache utilization
 COPY package*.json ./
-COPY tsconfig.json ./
-COPY vite.config.ts ./
-COPY tailwind.config.ts ./
-COPY postcss.config.js ./
-COPY theme.json ./
-COPY .env ./
 
-# Install all dependencies for building
+# Install dependencies
 RUN npm install
+
+# Copy configuration files
+COPY tsconfig.json vite.config.ts tailwind.config.ts postcss.config.js theme.json ./
+COPY drizzle.config.ts ./
 
 # Copy source code
 COPY client/ ./client/
 COPY server/ ./server/
 COPY db/ ./db/
-COPY drizzle.config.ts ./
 
 # Build the application
 RUN npm run build
@@ -34,35 +31,27 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Set npm registry for production stage
-RUN npm config set registry https://registry.npmmirror.com/
-
-# Copy package files and install production dependencies
+# Set npm registry and install ALL necessary dependencies
 COPY package*.json ./
-RUN npm install --omit=dev
+RUN npm config set registry https://registry.npmmirror.com/ && \
+    npm install --production=false
 
-# Copy built files from builder stage
+# Copy built files and configs
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.env ./
+COPY theme.json drizzle.config.ts ./
 
-# Copy necessary configuration files
-COPY drizzle.config.ts ./
-COPY theme.json ./
-
-# Create necessary directories
+# Create necessary directories and files
 RUN mkdir -p uploads logs && \
+    touch .env && \
     chown -R node:node /app
 
-# Switch to non-root user
+# Use non-root user
 USER node
 
-# Expose the port the app runs on
+# Expose port and set environment
 EXPOSE 3010
-
-# Set environment variables
-ENV NODE_ENV=production
-ENV PORT=3010
+ENV NODE_ENV=production \
+    PORT=3010
 
 # Start the application
 CMD ["node", "dist/index.js"] 

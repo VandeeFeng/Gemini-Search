@@ -4,7 +4,7 @@ name: gemini-search
 
 services:
   app:
-    image: gemini-search:latest
+    image: gemini-search
     build:
       context: .
       dockerfile: Dockerfile
